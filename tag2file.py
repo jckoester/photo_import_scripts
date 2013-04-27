@@ -25,13 +25,15 @@ def clean_tags(xmppath):
 
     if(tagslist):
         tagslist = [t for t in tagslist if not "_Digikam_root_tag_" in t]
-    print tagslist
+        print tagslist
     
-    args={"tagslist":','.join(tagslist)}
-    print args
-    with exiftool.ExifTool() as et:
-        et.set_tags(args, xmppath)
-    os.remove(xmppath+"_original")
+        args={"tagslist":','.join(tagslist)}
+        print args
+        with exiftool.ExifTool() as et:
+            et.set_tags(args, xmppath)
+        os.remove(xmppath+"_original")
+    else:
+        print "Nothing to clean!"
     return
 
 def tags_to_file(filepath, xmppath):
