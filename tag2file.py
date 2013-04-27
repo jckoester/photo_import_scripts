@@ -22,8 +22,10 @@ n_zfill=3
 def clean_tags(xmppath):
     with exiftool.ExifTool() as et:
         tagslist = et.get_tag('tagslist', xmppath)
+
+    if(tagslist):
+        tagslist = [t for t in tagslist if not "_Digikam_root_tag_" in t]
     print tagslist
-    tagslist = [t for t in tagslist if not "_Digikam_root_tag_" in t]
     
     args={"tagslist":','.join(tagslist)}
     print args
