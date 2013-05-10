@@ -81,6 +81,11 @@ def rename(path, *args, **kwargs):
     
     name_old, ext = os.path.splitext(path)
     folderpath=os.path.dirname(path)
+
+    #Check for alternative JPG
+    if kwargs['suffix']=='ORI' and ext=='.JPG' and os.path.exists(name_old+'.NEF'):
+        kwargs['suffix']='ORI_ALT'
+
     #Get exif information:
     values = getexifvalue(path, {'DateTimeOriginal', 'Model', 'ShutterCount', 'SerialNumber'} )
 
