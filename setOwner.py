@@ -2,48 +2,66 @@
 # -*- coding: utf-8 -*-
 #=================DESCRIPTION IS MISSING!========================================#
 
+################ ACHTUNG ###################
+#-Parameter wurden auf argparse umgestellt.
+#-verwendet jetzt die process-folder Prozedur aus lib/commonfunc.py
+
+
 #System environment
 import sys
 import os
 import datetime
+import subprocess
+import argparse
+
+
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
-from lib.pyexiftool_settags import exiftool
+#from lib.pyexiftool_settags import exiftool
+from lib import commonfunc as cf
 
 #SETTINGS:
-file_exts=('.tif','.nef','.jpg','.png', '.xmp')
-photo_exts=('.tif','.nef','.jpg','.png')
-owner_names={"Jan":['Jan Köster', "jan.koester@koester-becker.de", "http://www.cbjck.de", "cc-by-sa"], "Cornelia":["Cornelia Becker", "cornelia.becker@koester-becker.de", "http://www.cbjck.de", ""]}
+#file_exts=('.tif','.nef','.jpg','.png', '.xmp')
+#photo_exts=('.tif','.nef','.jpg','.png')
+owner_names={"Jan":[u"Jan Köster".encode('utf-8'), u"jan.koester@koester-becker.de".encode('utf-8'), u"http://www.cbjck.de".encode('utf-8'), u"cc-by-sa".encode('utf-8')], "Cornelia":["Cornelia Becker", "cornelia.becker@koester-becker.de", "http://www.cbjck.de", ""]}
 
-def set_owner(filepath, owner, mail="", web="", license=""):
-    args={"Creator":owner.decode('utf-8'),"CreatorWorkEmail":mail.decode('utf-8'),"CreatorWorkURL":web.decode('utf-8'),"copyright":license.decode('utf-8')}
-    print filepath
-    with exiftool.ExifTool() as et:
-        et.set_tags(args, filepath)
-    return
+##defining the options:
+parser = argparse.ArgumentParser(description='Set owner and copyright information for all images in a folder or a single image file.')
+
+parser.add_argument("path", help="Path of the folder containing the images")
+parser.add_argument("-owner", help="Name of the copyright owner")
+parser.add_argument("-mail", help="Email address of the copyright owner")
+parser.add_argument("-web", help="Homepage of the copyright owner")
+parser.add_argument("-license", help="License information for the images")
+
+parser.add_argument("-y", "--dontask", action="store_true", help="Perform the command without asking for confirmation.")
+parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+
+#Processing the arguments
+args = parser.parse_args()
+
 
 path = None
 owner= None
+verbose=False
 
-
-if len(sys.argv) > 1:
-    path = sys.argv[1]
-if len(sys.argv) > 2:
-    owner = sys.argv[2]
-if len(sys.argv) > 3:
-    mail = sys.argv[3]
-if len(sys.argv) > 4:
-    web = sys.argv[4]
-if len(sys.argv) > 5:
-    license = sys.argv[5]
+#Check for verbose mode
+if args.verbose:
+    verbose=True
+    cf.verbose=True
 
 
 #Check source folder
-if not (os.path.exists(path)):
-    print "Ordner "+path+" existiert nicht"
+if not (os.path.exists(args.path)):
+    print "Ordner "+args.path+" existiert nicht"
+    sys.exit(0)
+
+#Check other params if in quiet mode:
+if args.dontask and len(args.owner)==0:
+    print "No owner set. Quitting."
     sys.exit(0)
 
 #Check Owner name
-if owner is None or len(owner) <= 0:
+if args.owner is None or len(args.owner) <= 0:
     print "Kein Urheber angegeben. Bitte auswählen oder eingeben:"
     outp_text=str("")
     owners=[]
@@ -64,37 +82,31 @@ if owner is None or len(owner) <= 0:
     else:
         owner = owner_name
         outp_text=str(len(owner_names)+1)+". Beliebiger Urheber'"+owner+"' (eMail-Adresse eintippen - optional)"
-        mail = raw_input( outp_text )
+        mail = raw_input( outp_text ).decode()
         outp_text=str(len(owner_names)+1)+". Beliebiger Urheber'"+owner+"' (Website eintippen - optional)"
         web = raw_input( outp_text )
         outp_text=str(len(owner_names)+1)+". Beliebiger Urheber '"+owner+"' (Lizenzinformationen eintippen - optional)"
         license = raw_input( outp_text )
-        
-yn = raw_input( "Setze Urheber auf\t'"+owner+"'\neMail:\t\t\t'"+mail+"'\nWebsite:\t\t'"+web+"'\nLizenz:\t\t\t'"+license+"'\n Bitte bestätigen (j/n)" )
-if not yn == "j":
-    print "Abbruch."
-    sys.exit(0)
 else:
+    owner = args.owner
+    mail = args.mail
+    web = args.web
+    license = args.license
+
+if not args.dontask:
+    yn = raw_input( "Setze Urheber auf\t'"+owner+"'\neMail:\t\t\t'"+mail+"'\nWebsite:\t\t'"+web+"'\nLizenz:\t\t\t'"+license+"'\n Bitte bestätigen (j/n)" )
+    if not yn == "j":
+        print "Abbruch."
+        sys.exit(0)
+if verbose:
     print "Setze Urheber-Daten..."
-        
-#Check if path exists
-if os.path.exists(path):
-    #rename all tiff to tif
-    files_tiff = [ f for f in os.listdir(path)  if f[-4:].lower() == 'tiff']
-    if len(files_tiff)>0:
-        print "Umbenennen von *.tiff nach *.tif"
-        for t in files_tiff:       
-            name=os.path.splitext(t)[0]
-            os.rename(os.path.join(path, t), os.path.join(path,name+".tif"))
-            
-    #create a list of file names from image files in our folder
-    files=[ f for f in os.listdir(path)  if f[-4:].lower() in photo_exts]
-    for f in files:
-        if os.path.exists(os.path.join(path, f)):
-            set_owner(os.path.join(path, f), owner, mail, web, license)
-        else:
-            print "Datei verschwunden: '"+f+ext+"'."
-    print "Urheber setzen abgeschlossen."
-else:
-    print "Kein Pfad angeben."
-    sys.exit(0)
+
+procopts=[]
+procargs = {"Creator":owner, "CreatorWorkEmail":mail, "CreatorWorkURL":web, "Copyright":license}
+
+if os.path.isdir(args.path):
+    cf.process_folder(args.path, cf.et_write, procopts, procargs)
+elif os.path.isfile(args.path):
+    cf.et_write(args.path, *procopts, **procargs)
+sys.exit(0)
+
