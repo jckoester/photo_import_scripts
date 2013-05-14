@@ -27,7 +27,7 @@ owner_names={"Jan":[u"Jan Köster".encode('utf-8'), u"jan.koester@koester-becker
 ##function for doing the work:
 def set_owner(path, *args, **kwargs):
     try:
-        subprocess.check_call(["exiftool", "-overwrite_original", "-Creator="+kwargs['Creator'], "CreatorWorkEmail="+kwargs['CreatorWorkEmail'], "-CreatorWorkURL="+kwargs['CreatorWorkURL'], "-Copyright="+kwargs['Copyright'], path])
+        subprocess.check_call(["exiftool", "-overwrite_original", "-Creator="+kwargs['Creator'], "-CreatorWorkEmail="+kwargs['CreatorWorkEmail'], "-CreatorWorkURL="+kwargs['CreatorWorkURL'], "-Copyright="+kwargs['Copyright'], path])
     except subprocess.CalledProcessError:
         print "Exiftool meldete einen Fehler beim Verarbeiten von '"+path+"'."
     return
