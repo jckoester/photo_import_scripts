@@ -24,6 +24,13 @@ from lib import commonfunc as cf
 #photo_exts=('.tif','.nef','.jpg','.png')
 owner_names={"Jan":[u"Jan Köster".encode('utf-8'), u"jan.koester@koester-becker.de".encode('utf-8'), u"http://www.cbjck.de".encode('utf-8'), u"cc-by-sa".encode('utf-8')], "Cornelia":["Cornelia Becker", "cornelia.becker@koester-becker.de", "http://www.cbjck.de", ""]}
 
+##function for doing the work:
+def set_owner(path, *args, **kwargs):
+    try:
+        subprocess.check_call(["exiftool", "-overwrite_original", "-Creator="+kwargs['Creator'], "CreatorWorkEmail="+kwargs['CreatorWorkEmail'], "-CreatorWorkURL="+kwargs['CreatorWorkURL'], "-Copyright="+kwargs['Copyright'], path])
+    except subprocess.CalledProcessError:
+        print "Exiftool meldete einen Fehler beim Verarbeiten von '"+path+"'."
+    return
 ##defining the options:
 parser = argparse.ArgumentParser(description='Set owner and copyright information for all images in a folder or a single image file.')
 
@@ -105,8 +112,8 @@ procopts=[]
 procargs = {"Creator":owner, "CreatorWorkEmail":mail, "CreatorWorkURL":web, "Copyright":license}
 
 if os.path.isdir(args.path):
-    cf.process_folder(args.path, cf.et_write, procopts, procargs)
+    cf.process_folder(args.path, set_owner, procopts, procargs)
 elif os.path.isfile(args.path):
-    cf.et_write(args.path, *procopts, **procargs)
+    set_owner(args.path, *procopts, **procargs)
 sys.exit(0)
 
