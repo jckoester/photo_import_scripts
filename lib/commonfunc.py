@@ -117,7 +117,7 @@ def rename(path, *args, **kwargs):
 
 
 #apply procfun with arguments in procargs on each file in path
-def process_folder(path, procfun, procargs, prockwargs, verbose=False):
+def process_folder(path, procfun, procargs, prockwargs):
     #Check if path exists
     if os.path.exists(path):
         if verbose:
