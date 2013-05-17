@@ -101,7 +101,10 @@ def rename(path, *args, **kwargs):
              camera=values['EXIF:Model'][6:]
 
         if(values['EXIF:Model'][:5]=='NIKON' and not 'MakerNotes:ShutterCount' in values.keys()	):
-            print "Überspringe Datei "+path+", ShutterCount nicht gesetzt"
+            if verbose:
+                print "Überspringe Datei "+path+", ShutterCount nicht gesetzt"
+            return
+
         elif(values['EXIF:Model'][:5]=='NIKON'):
             shuttercount=values['MakerNotes:ShutterCount']
             camera=values['EXIF:Model'][6:]
