@@ -5,6 +5,7 @@ import os
 import subprocess
 import datetime
 import shutil
+import re
 #class for manipulating xmp, exif and iptc
 #import pyexiv2
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
@@ -93,19 +94,34 @@ def rename(path, *args, **kwargs):
         date=values['EXIF:DateTimeOriginal']
         date=datetime.datetime.strptime(date, "%Y:%m:%d %H:%M:%S")
         camera=values['EXIF:Model']
-        name_new=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"
+        name_new_start=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"
         name_new_end="_"+kwargs['suffix']+ext.upper()
 
         if(values['EXIF:Model'][:5]=='NIKON'):
+             camera=values['EXIF:Model'][6:]
+
+        if(values['EXIF:Model'][:5]=='NIKON' and not 'MakerNotes:ShutterCount' in values.keys()	):
+            print "Überspringe Datei "+path+", ShutterCount nicht gesetzt"
+        elif(values['EXIF:Model'][:5]=='NIKON'):
             shuttercount=values['MakerNotes:ShutterCount']
             camera=values['EXIF:Model'][6:]
-            name_new+=camera+"_"+str(shuttercount).zfill(6)+name_new_end
+            name_new_start+=camera+"_"+str(shuttercount).zfill(6)
         else:
+            name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"
             c=0
-            name_new+=camera+"_"+date.strftime("%H%M%S")+"_"+str(c)+name_new_end
-            while(os.path.exists(name_new)):
+            while(os.path.exists(name_new_start+str(c)+name_new_end)):
                 c+=1
-                name_new+=camera+"_"+date.strftime("%H%M%S")+"_"+str(c)+name_new_end
+#                name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"+str(c)
+            name_new_start+=str(c)
+
+        if(re.search('(BEA)', kwargs['suffix'])):
+            c=0
+            name_new_end="_"+str(c)+"_"+kwargs['suffix']+ext.upper()
+            while(os.path.exists(name_new_start+name_new_end)):
+                name_new_end="_"+str(c)+"_"+kwargs['suffix']+ext.upper()
+                c+=1
+
+        name_new=name_new_start+name_new_end
         if verbose:
             print os.path.basename(path)+" >> "+name_new
 
