@@ -86,7 +86,7 @@ if os.path.isdir(args.path):
     cf.process_folder(args.path, cf.rename, procopts, procargs)
 #If file
 elif os.path.isfile(args.path):
-    cf.rename(args.path, procopts, procargs)
+    cf.rename(args.path, *procopts, **procargs)
 
 if verbose:
     print "Umbenennen abgeschlossen."
