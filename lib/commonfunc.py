@@ -130,8 +130,9 @@ def rename(path, *args, **kwargs):
             c=0
             name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
             while(os.path.exists(name_new_start+name_new_end)):
-                name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
                 c+=1
+                name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
+#                c+=1
 
         name_new=name_new_start+name_new_end
         if verbose:
