@@ -121,7 +121,7 @@ def rename(path, *args, **kwargs):
         else:
             name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"
             c=0
-            while(os.path.exists(name_new_start+str(c)+name_new_end)):
+            while(os.path.exists(os.path.join(folderpath,name_new_start+str(c)+name_new_end))):
                 c+=1
 #                name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"+str(c)
             name_new_start+=str(c)
@@ -129,10 +129,9 @@ def rename(path, *args, **kwargs):
         if(re.search('(BEA)', kwargs['suffix'])):
             c=0
             name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
-            while(os.path.exists(name_new_start+name_new_end)):
+            while(os.path.exists(os.path.join(folderpath, name_new_start+name_new_end))):
                 c+=1
                 name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
-#                c+=1
 
         name_new=name_new_start+name_new_end
         if verbose:
