@@ -111,15 +111,15 @@ def get_shuttercount(date, camera):
         print "Datenbank-Suche nach %s %s" % t
     c.execute("SELECT shuttercount FROM shuttercount WHERE timestamp = ? AND camera = ? ", t )
 
-    shuttercount=c.fetchone()[0]
+    shuttercount=c.fetchone()
     if not shuttercount:
         if verbose:
-            print "Keine Daten gefunden für %s %s" % t
+            print "Keine Daten gefunden."
             return False
     else:
         if verbose:
-            print "ShutterCount %s zu %s %s gefunden." % (shuttercount, date, camera)
-        return shuttercount
+            print "ShutterCount %s zu %s %s gefunden." % (shuttercount[0], date, camera)
+        return shuttercount[0]
 
 def check(path, *args, **kwargs):
     #check if path exists:

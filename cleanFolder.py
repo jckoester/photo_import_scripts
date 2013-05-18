@@ -17,7 +17,7 @@ if len(sys.argv) > 1:
 if os.path.exists(path):
             
     #create a list of file names from files to delete in our folder
-    files=[ f for f in os.listdir(path)  if f[-4:].lower() in del_exts]
+    files=[ f for f in os.listdir(path)  if f[-4:].lower() in del_exts or f[-9:].lower() in del_exts ]
     for f in files:
         os.remove(path+f)        
     print "Aufräumen abgeschlossen."
