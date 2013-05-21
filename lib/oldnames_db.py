@@ -62,7 +62,7 @@ def scan(path):
         print "Datei "+path+" existiert nicht."
 
     #Get Filename
-    filename = os.path.filename(path)
+    filename = os.path.basename(path)
 
     #Get exif information:
     values = cf.getexifvalue(path, {'DateTimeOriginal', 'Model', 'ShutterCount', 'SerialNumber'} )
@@ -130,7 +130,7 @@ def check(path, *args, **kwargs):
     if not os.path.exists(path):
         print "Datei "+path+" existiert nicht."
     #Get Filename
-    filename = os.path.filename(path)
+    filename = os.path.basename(path)
 
     return get_shuttercount(filename)
     
