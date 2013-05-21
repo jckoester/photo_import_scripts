@@ -86,19 +86,22 @@ def scan(path):
             if verbose:
                 print "Für Kamera "+camera+" wurde keine Prozedur definiert."
             return
-        print date, camera, shuttercount
-        #Check if dataset already in db:
-        t=(filename, date, camera, shuttercount)
-        c.execute("SELECT * FROM oldnames WHERE oldname = ? AND timestamp = ? AND camera = ? AND shuttercount = ?", t )
-        if not c.fetchone():
-            if verbose:
-                print "Speichere %s für Datei %s." % (shuttercount, path)
-            c.execute("INSERT INTO oldnames VALUES (?,?,?,?)", t)
-            conn.commit()
-            conn.close()
+        if shuttercount:
+            print date, camera, shuttercount
+            #Check if dataset already in db:
+            t=(filename, date, camera, shuttercount)
+            c.execute("SELECT * FROM oldnames WHERE oldname = ? AND timestamp = ? AND   camera = ? AND shuttercount = ?", t )
+            if not c.fetchone():
+                if verbose:
+                    print "Speichere %s für Datei %s." % (shuttercount, path)
+                c.execute("INSERT INTO oldnames VALUES (?,?,?,?)", t)
+                conn.commit()
+                conn.close()
+            else:
+                if verbose:
+                    print "%s aus Datei %s schon gespeichert." % (shuttercount, path)
         else:
-            if verbose:
-                print "%s aus Datei %s schon gespeichert." % (shuttercount, path)
+            print "Kein ShutterCount in EXIF gespeichert. Datei: "+path+" wurde übersprungen."
 
     else:
         print "Kein Kameramodell in EXIF gespeichert. Datei: "+path+" wurde übersprungen."
