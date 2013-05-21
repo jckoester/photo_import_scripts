@@ -93,7 +93,7 @@ def scan(path):
         if not c.fetchone():
             if verbose:
                 print "Speichere %s für Datei %s." % (shuttercount, path)
-            c.execute("INSERT INTO oldnames VALUES (?,?,?)", t)
+            c.execute("INSERT INTO oldnames VALUES (?,?,?,?)", t)
             conn.commit()
             conn.close()
         else:
