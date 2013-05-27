@@ -62,7 +62,7 @@ def scan(path):
         print "Datei "+path+" existiert nicht."
 
     #Get Filename
-    filename = os.path.basename(path)
+    filename, ext = os.path.splitext(os.path.basename(path))
 
     #Get exif information:
     values = cf.getexifvalue(path, {'DateTimeOriginal', 'Model', 'ShutterCount', 'SerialNumber'} )
@@ -109,6 +109,10 @@ def scan(path):
     return
 
 def get_shuttercount(oldname):
+    #Strip extension from filename
+    oldname, ext = os.path.splitext(path)
+
+    #Database connection
     conn = sqlite3.connect('oldnames.db')
     c = conn.cursor()
 
