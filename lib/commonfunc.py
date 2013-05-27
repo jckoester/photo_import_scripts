@@ -7,6 +7,7 @@ import datetime
 import shutil
 import re
 import edited_db as db
+import oldnames_db as ofdb
 #class for manipulating xmp, exif and iptc
 #import pyexiv2
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
@@ -103,7 +104,7 @@ def rename(path, *args, **kwargs):
 
         if(values['EXIF:Model'][:5]=='NIKON' and not 'MakerNotes:ShutterCount' in values.keys()	):
             if verbose:
-                print "ShutterCount nicht gesetzt für %s, durchsuche Datenbank" % path
+                print "ShutterCount nicht gesetzt für %s, durchsuche Datenbank der Originale." % path
             shuttercount = db.get_shuttercount(date, camera)
             if shuttercount:
                 if verbose:
@@ -111,8 +112,17 @@ def rename(path, *args, **kwargs):
                 name_new_start+=camera+"_"+str(shuttercount).zfill(6)
             else:
                 if verbose:
-                    print "Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path
-                return
+                    print "ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen..."
+                filename=os.path.basename(path)
+                shuttercount = ofdb.get_shuttercount(filename)
+                if shuttercount:
+                    if verbose:
+                        print "Wert für ShutterCount gefunden."
+                    name_new_start+=camera+"_"+str(shuttercount).zfill(6)
+                else:
+                    if verbose:
+                        print "Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path
+                    return
 
         elif(values['EXIF:Model'][:5]=='NIKON'):
             shuttercount=values['MakerNotes:ShutterCount']
