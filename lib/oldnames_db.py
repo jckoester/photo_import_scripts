@@ -113,7 +113,7 @@ def get_shuttercount(oldname):
     c = conn.cursor()
 
     #Look in database:
-    t=(oldname)
+    t=(oldname, )
     if verbose:
         print "Datenbank-Suche nach %s %s" % t
     c.execute("SELECT shuttercount FROM oldnames WHERE oldname = ?", t )
