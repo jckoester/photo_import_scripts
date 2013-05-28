@@ -91,6 +91,8 @@ def rename(path, *args, **kwargs):
     name_new_start=False
     name_new_end=False
 
+    filename=os.path.basename(path)
+
     #Check for alternative JPG
     if kwargs['suffix']=='ORI' and ext=='.JPG' and os.path.exists(name_old+'.NEF'):
         kwargs['suffix']='ORI_ALT'
@@ -129,7 +131,7 @@ def rename(path, *args, **kwargs):
             else:
                 if verbose:
                     print "ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen..."
-                filename=os.path.basename(path)
+                
                 shuttercount = ofdb.get_shuttercount(filename)
                 if shuttercount:
                     if verbose:
