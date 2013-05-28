@@ -110,7 +110,7 @@ def scan(path):
 
 def get_shuttercount(oldname):
     #Strip extension from filename
-    oldname, ext = os.path.splitext(path)
+    oldname, ext = os.path.splitext(oldname)
 
     #Database connection
     conn = sqlite3.connect('oldnames.db')
