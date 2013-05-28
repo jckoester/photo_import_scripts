@@ -102,7 +102,7 @@ def rename(path, *args, **kwargs):
          #Suche in oldnames
         if verbose:
             print "Kein Kameramodell in EXIF gespeichert. Suche in Datenbank mit alten Dateinamen..."
-         date,camera,shuttercount = ofdb.get_data(filename)
+        date,camera,shuttercount = ofdb.get_data(filename)
         print date
         print camera
         print shuttercount
