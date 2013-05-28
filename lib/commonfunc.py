@@ -85,12 +85,28 @@ def rename(path, *args, **kwargs):
     name_old, ext = os.path.splitext(path)
     folderpath=os.path.dirname(path)
 
+    date=False
+    camera=False
+    shuttercount=False
+    name_new_start=False
+    name_new_end=False
+
     #Check for alternative JPG
     if kwargs['suffix']=='ORI' and ext=='.JPG' and os.path.exists(name_old+'.NEF'):
         kwargs['suffix']='ORI_ALT'
 
     #Get exif information:
     values = getexifvalue(path, {'DateTimeOriginal', 'Model', 'ShutterCount', 'SerialNumber'} )
+
+    if not ('EXIF:Model' in values):
+         #Suche in oldnames
+        if verbose:
+            print "Kein Kameramodell in EXIF gespeichert. Suche in Datenbank mit alten Dateinamen..."
+         date,camera,shuttercount = ofdb.get_data(filename)
+        print date
+        print camera
+        print shuttercount
+
 
     if('EXIF:Model' in values):
         date=values['EXIF:DateTimeOriginal']
@@ -142,15 +158,19 @@ def rename(path, *args, **kwargs):
             while(os.path.exists(os.path.join(folderpath, name_new_start+name_new_end))):
                 c+=1
                 name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
+    else:
+        if verbose:
+            print "Kein Kameramodell in EXIF gespeichert. Umbenennen fehlgeschlagen für Datei: "+path
 
+    if name_new_end and name_new_start:
         name_new=name_new_start+name_new_end
         if verbose:
             print os.path.basename(path)+" >> "+name_new
 
         shutil.move(path,os.path.join(folderpath,name_new))
     else:
-        print "Kein Kameramodell in EXIF gespeichert. Umbenennen fehlgeschlagen für Datei: "+path
-
+        if verbose:
+            print "Umbennennen fehlgeschlagen für %s" % path
     return
 
 

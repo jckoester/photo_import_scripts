@@ -132,6 +132,30 @@ def get_shuttercount(oldname):
             print "ShutterCount %s zu %s gefunden." % (shuttercount[0], oldname)
         return shuttercount[0]
 
+def get_data(oldname):
+    #Strip extension from filename
+    oldname, ext = os.path.splitext(oldname)
+
+    #Database connection
+    conn = sqlite3.connect('oldnames.db')
+    c = conn.cursor()
+
+    #Look in database:
+    t=(oldname, )
+    if verbose:
+        print "Datenbank-Suche nach %s %s" % t
+    c.execute("SELECT * FROM oldnames WHERE oldname = ?", t )
+
+    data=c.fetchone()
+    if not data:
+        if verbose:
+            print "Keine Daten gefunden."
+            return False
+    else:
+        if verbose:
+            print "ShutterCount %s zu %s gefunden." % (data[1], oldname)
+        return (data[1], data[2], data[3]) 
+
 def check(path, *args, **kwargs):
     #check if path exists:
     if not os.path.exists(path):
