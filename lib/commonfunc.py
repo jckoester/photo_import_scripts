@@ -13,8 +13,8 @@ import oldnames_db as ofdb
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
 from pyexiftool_settags import exiftool
 #Global vars
-file_exts=('.tif','.nef','.jpg','.png', '.xmp')
-photo_exts=('.tif','.nef','.jpg','.png')
+file_exts=('.tif','.nef','.jpg','.png', '.xmp', 'xcf')
+photo_exts=('.tif','.nef','.jpg','.png', 'xcf')
 verbose=False
 
 
@@ -98,21 +98,28 @@ def rename(path, *args, **kwargs):
         kwargs['suffix']='ORI_ALT'
 
     #Get exif information:
-    values = getexifvalue(path, {'DateTimeOriginal', 'Model', 'ShutterCount', 'SerialNumber'} )
+    values = getexifvalue(path, {'DateTimeOriginal','ModifyDate', 'Model', 'ShutterCount', 'ImageNumber', 'SerialNumber', 'FileNumber'} )
 
     if not ('EXIF:Model' in values):
          #Suche in oldnames
         if verbose:
             print "Kein Kameramodell in EXIF gespeichert. Suche in Datenbank mit alten Dateinamen..."
         date,camera,shuttercount = ofdb.get_data(filename)
+        date=datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+#        name_new_start=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"+camera+"_"+shuttercount+"_"
+#        name_new_end=kwargs['suffix']+ext.upper()
         print date
         print camera
         print shuttercount
 
 
     if('EXIF:Model' in values):
-        date=values['EXIF:DateTimeOriginal']
-        date=datetime.datetime.strptime(date, "%Y:%m:%d %H:%M:%S")
+        if('EXIF:DateTimeOriginal' in values):
+            date=values['EXIF:DateTimeOriginal']
+            date=datetime.datetime.strptime(date, "%Y:%m:%d %H:%M:%S")
+        else:
+            date=values['EXIF:ModifyDate']
+            date=datetime.datetime.strptime(date, "%Y:%m:%d %H:%M:%S")
         camera=values['EXIF:Model']
         name_new_start=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"
         name_new_end="_"+kwargs['suffix']+ext.upper()
@@ -120,32 +127,55 @@ def rename(path, *args, **kwargs):
         if(values['EXIF:Model'][:5]=='NIKON'):
              camera=values['EXIF:Model'][6:]
 
+        if(values['EXIF:Model'][:5]=='Canon'):
+            camera=values['EXIF:Model'][6:]
+            camera=camera.replace(" ", "")
+
+        if(values['EXIF:Model']=='Pre'):
+            camera="PalmPre"
+            
+
         if(values['EXIF:Model'][:5]=='NIKON' and not 'MakerNotes:ShutterCount' in values.keys()	):
-            if verbose:
-                print "ShutterCount nicht gesetzt für %s, durchsuche Datenbank der Originale." % path
-            shuttercount = db.get_shuttercount(date, camera)
-            if shuttercount:
-                if verbose:
-                    print "Wert für ShutterCount gefunden."
+            if('XMP:ImageNumber' in values.keys()):
+                shuttercount=values['XMP:ImageNumber']
                 name_new_start+=camera+"_"+str(shuttercount).zfill(6)
             else:
                 if verbose:
-                    print "ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen..."
-                
-                shuttercount = ofdb.get_shuttercount(filename)
+                    print "ShutterCount nicht gesetzt für %s, durchsuche Datenbank der Originale." % path
+                shuttercount = db.get_shuttercount(date, camera)
                 if shuttercount:
                     if verbose:
                         print "Wert für ShutterCount gefunden."
                     name_new_start+=camera+"_"+str(shuttercount).zfill(6)
                 else:
                     if verbose:
-                        print "Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path
-                    return
+                        print "ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen..."
+                
+                    shuttercount = ofdb.get_shuttercount(filename)
+                    print shuttercount
+                    if shuttercount:
+                        if verbose:
+                            print "Wert für ShutterCount gefunden."
+                        name_new_start+=camera+"_"+str(shuttercount).zfill(6)
+                    else:
+                        if verbose:
+                            print "Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path
+                        if(not kwargs['force']):
+                            return
+                        else:
+                            name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"
+                            c=0
+                            while(os.path.exists(os.path.join(folderpath,name_new_start+str(c)+name_new_end))):
+                                c+=1
+                            name_new_start+=str(c)
 
         elif(values['EXIF:Model'][:5]=='NIKON'):
             shuttercount=values['MakerNotes:ShutterCount']
             camera=values['EXIF:Model'][6:]
             name_new_start+=camera+"_"+str(shuttercount).zfill(6)
+            print name_new_start
+        elif(values['EXIF:Model'][:5]=='Canon' and values['MakerNotes:FileNumber']):
+            name_new_start+=camera+"_"+str(values['MakerNotes:FileNumber'])
         else:
             name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"
             c=0
@@ -154,15 +184,17 @@ def rename(path, *args, **kwargs):
 #                name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"+str(c)
             name_new_start+=str(c)
 
-        if(re.search('(BEA)', kwargs['suffix'])):
+        
+    else:
+        if verbose:
+            print "Kein Kameramodell in EXIF gespeichert. Umbenennen fehlgeschlagen für Datei: "+path
+
+    if(re.search('(BEA)', kwargs['suffix'])):
             c=0
             name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
             while(os.path.exists(os.path.join(folderpath, name_new_start+name_new_end))):
                 c+=1
                 name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
-    else:
-        if verbose:
-            print "Kein Kameramodell in EXIF gespeichert. Umbenennen fehlgeschlagen für Datei: "+path
 
     if name_new_end and name_new_start:
         name_new=name_new_start+name_new_end

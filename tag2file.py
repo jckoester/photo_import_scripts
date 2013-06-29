@@ -41,7 +41,7 @@ def tags_to_file(filepath, xmppath):
     print xmppath
     
     try:
-        subprocess.check_call(["exiftool", "-overwrite_original", "-tagsfromfile", xmppath, filepath])
+        subprocess.check_call(["exiftool", "-overwrite_original", "-tagsfromfile", xmppath, "--all", "-subject", "-tagslist", "-hierarchicalSubject", "-title", "-Description", "-JobID", "-ColorLabel", "-PickLabel", "-XMP:Rating", filepath])
         os.remove(xmppath)
     except subprocess.CalledProcessError:
         print "Exiftool meldete einen Fehler beim Verarbeiten von '"+xmppath+"'."
@@ -74,11 +74,11 @@ if os.path.exists(path):
     for f in files:
         #check if image.xmp exists:
         if os.path.exists(os.path.join(path, f+'.xmp')):
-            clean_tags(os.path.join(path, f+'.xmp'))
+            #clean_tags(os.path.join(path, f+'.xmp'))
             tags_to_file(os.path.join(path, f), os.path.join(path, f+'.xmp'))
         else:
             if os.path.exists(os.path.join(path, f+'.XMP')):
-                clean_tags(os.path.join(path, f+'.xmp'))
+                #clean_tags(os.path.join(path, f+'.xmp'))
                 tags_to_file(os.path.join(path, f), os.path.join(path, f+'.XMP'))
             else:
                 print "Keine xmp-Metadata für Datei '"+f+"'."

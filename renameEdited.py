@@ -58,7 +58,7 @@ if args.scan:
         cf.process_folder(args.path, db.scan, procopts, procargs)
     #If file
     elif os.path.isfile(args.path):
-        db.scan(args.path, procopts, procargs)
+        db.scan(args.path, *procopts, **procargs)
 
 if args.check:
     procopts=[]

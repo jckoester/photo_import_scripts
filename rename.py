@@ -25,6 +25,8 @@ parser.add_argument("path", help="Path of the folder containing the images / pat
 parser.add_argument("-p", "--prefix", default="", help="2 letter prefix indicating the creator")
 parser.add_argument("-s", "--suffix", default="", help="suffix indicating the type of image. (eg ORI for original file, DMA for digital master, PRN for a printer optimzed file (please use PRN_profilename for profiled images))")
 
+parser.add_argument("-f", "--force", action="store_true", help="Force renaming using time if no shuttercount is set.")
+
 parser.add_argument("-y", "--dontask", action="store_true", help="Perform the command without asking for confirmation.")
 parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
 
@@ -78,8 +80,9 @@ if not args.dontask:
 if verbose:
     print "Starte Umbenennen..."
 
+print args.force
 procopts=[]
-procargs={'prefix':args.prefix, 'suffix':args.suffix}
+procargs={'prefix':args.prefix, 'suffix':args.suffix, 'force':args.force}
 
 #If folder
 if os.path.isdir(args.path):
