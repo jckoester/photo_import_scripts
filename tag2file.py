@@ -41,7 +41,7 @@ def tags_to_file(filepath, xmppath):
     print xmppath
     
     try:
-        subprocess.check_call(["exiftool", "-overwrite_original", "-tagsfromfile", xmppath, "--all", "-subject", "-tagslist", "-hierarchicalSubject", "-title", "-Description", "-JobID", "-ColorLabel", "-PickLabel", "-XMP:Rating", filepath])
+        subprocess.check_call(["exiftool", "-overwrite_original", "-tagsfromfile", xmppath, "--all", "-subject", "-tagslist", "-hierarchicalSubject", "-title", "-Description", "-PickLabel", "-XMP:Rating", "-XMP-digikam:ColorLabel", "-JobID", filepath])
         os.remove(xmppath)
     except subprocess.CalledProcessError:
         print "Exiftool meldete einen Fehler beim Verarbeiten von '"+xmppath+"'."
