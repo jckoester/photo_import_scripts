@@ -191,10 +191,10 @@ def rename(path, *args, **kwargs):
 
     if(re.search('(BEA)', kwargs['suffix'])):
             c=0
-            name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
+            name_new_end="_"+str(c)+kwargs['suffix']+"_"+ext.upper()
             while(os.path.exists(os.path.join(folderpath, name_new_start+name_new_end))):
                 c+=1
-                name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
+                name_new_end="_"+str(c)+kwargs['suffix']+"_"+ext.upper()
 
     if name_new_end and name_new_start:
         name_new=name_new_start+name_new_end
