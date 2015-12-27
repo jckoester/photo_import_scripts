@@ -53,11 +53,10 @@ def set_owner(path, *args, **kwargs):
 #config = configparser.ConfigParser()
 config = configparser.RawConfigParser()
 config.optionxform = lambda option: option
-if (os.path.exists('owner.cfg')):
-    config.read('owner.cfg')
+if (os.path.exists(os.path.join(os.path.dirname(__file__), 'owner.cfg'))):
+    config.read(os.path.join(os.path.dirname(__file__), 'owner.cfg'))
 else:
-    config.read('owner_example.cfg')
-
+    config.read(os.path.join(os.path.dirname(__file__), 'owner_example.cfg'))
 # Defining the options:
 parser = argparse.ArgumentParser(description='Set owner and copyright information for all images in a folder or a single image file.')
 parser.add_argument("file", help="Path of the folder containing the images")

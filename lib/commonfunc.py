@@ -13,7 +13,7 @@ import re
 #import pyexiv2
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
 sys.path.append(os.path.join(os.path.dirname(__file__), 'pyexiftool_settags/'))
-print(sys.path)
+
 #from pyexiftool_settags import exiftool
 import exiftool
 #Global vars
