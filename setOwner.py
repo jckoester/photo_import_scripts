@@ -1,10 +1,31 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-#=================DESCRIPTION IS MISSING!========================================#
 
-################ ACHTUNG ###################
-#-Parameter wurden auf argparse umgestellt.
-#-verwendet jetzt die process-folder Prozedur aus lib/commonfunc.py
+# DESCRIPTION ==================================================================
+# A python script to set owner/creator related metadata for photos based on
+# a configuration file. Multiple options can be configured and selected.
+# The script will the write any option of the selected section into the image
+# file(s). It is intended to be used for creator related information (hence
+# the name) but not limited to those. Basically you can use it write any set of
+# metadata to your image file(s) you like.
+
+# USAGE ========================================================================
+# Use the script on a single file or a directory:
+# setOwner.py <FILE>
+# you will be asked whih value from the config file you want to use
+# (if there are multiple)
+# OR
+# setOwner.py -section SECT <FILE>
+# to specify the section from the config file.
+
+# CHANGELOG ====================================================================
+# 0.5 (27th Dec 2015) partly rewritten, support for config files added
+
+# TODO =========================================================================
+# - Try interpolating options (references in the config file)
+# - Rename, as not only owner data can be written
+# - Add a license to the file
+# - Write documentation
 
 
 #System environment
@@ -13,107 +34,83 @@ import os
 import datetime
 import subprocess
 import argparse
-
+import configparser
 
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
 #from lib.pyexiftool_settags import exiftool
 from lib import commonfunc as cf
 
-#SETTINGS:
-#file_exts=('.tif','.nef','.jpg','.png', '.xmp')
-#photo_exts=('.tif','.nef','.jpg','.png')
-owner_names={"Jan":[u"Jan Köster".encode('utf-8'), u"jan.koester@koester-becker.de".encode('utf-8'), u"http://www.cbjck.de".encode('utf-8'), u"cc-by-sa".encode('utf-8')], "Cornelia":["Cornelia Becker", "cornelia.becker@koester-becker.de", "http://www.cbjck.de", ""]}
-
-##function for doing the work:
+# Procedure for writing the metadata
 def set_owner(path, *args, **kwargs):
     try:
-        subprocess.check_call(["exiftool", "-overwrite_original", "-Creator="+kwargs['Creator'], "-CreatorWorkEmail="+kwargs['CreatorWorkEmail'], "-CreatorWorkURL="+kwargs['CreatorWorkURL'], "-Copyright="+kwargs['Copyright'], path])
+        #subprocess.check_call(["exiftool", "-overwrite_original", "-Creator="+kwargs['Creator'], "-CreatorWorkEmail="+kwargs['CreatorWorkEmail'], "-CreatorWorkURL="+kwargs['CreatorWorkURL'], "-Copyright="+kwargs['Copyright'], path])
+        subprocess.check_call(["exiftool", "-overwrite_original", *args, path])
     except subprocess.CalledProcessError:
-        print "Exiftool meldete einen Fehler beim Verarbeiten von '"+path+"'."
+        print("Exiftool meldete einen Fehler beim Verarbeiten von '"+path+"'.")
     return
-##defining the options:
+
+# Read the configuration file:
+#config = configparser.ConfigParser()
+config = configparser.RawConfigParser()
+config.optionxform = lambda option: option
+if (os.path.exists('owner.cfg')):
+    config.read('owner.cfg')
+else:
+    config.read('owner_example.cfg')
+
+# Defining the options:
 parser = argparse.ArgumentParser(description='Set owner and copyright information for all images in a folder or a single image file.')
-
-parser.add_argument("path", help="Path of the folder containing the images")
-parser.add_argument("-owner", help="Name of the copyright owner")
-parser.add_argument("-mail", help="Email address of the copyright owner")
-parser.add_argument("-web", help="Homepage of the copyright owner")
-parser.add_argument("-license", help="License information for the images")
-
-parser.add_argument("-y", "--dontask", action="store_true", help="Perform the command without asking for confirmation.")
-parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output.")
+parser.add_argument("file", help="Path of the folder containing the images")
+parser.add_argument("-section", help="Name of the copyright owner, has to be defined as a section in the config file")
 
 #Processing the arguments
 args = parser.parse_args()
 
-
-path = None
-owner= None
-verbose=False
-
-#Check for verbose mode
-if args.verbose:
-    verbose=True
-    cf.verbose=True
-
-
-#Check source folder
-if not (os.path.exists(args.path)):
-    print "Ordner "+args.path+" existiert nicht"
+# Checking if file exists
+if not (os.path.exists(args.file)):
+    print("Path "+args.file+" does not exist")
     sys.exit(0)
 
-#Check other params if in quiet mode:
-if args.dontask and len(args.owner)==0:
-    print "No owner set. Quitting."
-    sys.exit(0)
-
-#Check Owner name
-if args.owner is None or len(args.owner) <= 0:
-    print "Kein Urheber angegeben. Bitte auswählen oder eingeben:"
-    outp_text=str("")
-    owners=[]
-    for i, name in enumerate(owner_names):
-        owners.append(name)
+# Check if owner section is set, else print a selection
+if args.section is None or len(args.section) <= 0:
+    print("No owner selected. Please choose from the options below:")
+    outp_text = ""
+    for i,name in enumerate(config.sections()):
         outp_text+=str(i+1)+". "+name+" ("+str(i+1)+")\n"
-    outp_text+=str(len(owner_names)+1)+". Beliebiger Urheber (Name eintippen)"
-    owner_name = raw_input( outp_text )
+    maxnum = i+2
+    #outp_text+=str(maxnum)+". Beliebiger Urheber (Name eintippen)"
+    # Printout text and read input
+    section_string = input( outp_text )
 
-    print owner_name
-    if '1' <= owner_name <= str(len(owner_names)):
-        data=owner_names[owners[int(owner_name)-1]]
-        owner=data[0]
-        mail=data[1]
-        web=data[2]
-        license=data[3]
-        
+    if '1' <= section_string <= str(maxnum):
+        index = config.sections()[int(section_string)-1]
     else:
-        owner = owner_name
-        outp_text=str(len(owner_names)+1)+". Beliebiger Urheber'"+owner+"' (eMail-Adresse eintippen - optional)"
-        mail = raw_input( outp_text ).decode()
-        outp_text=str(len(owner_names)+1)+". Beliebiger Urheber'"+owner+"' (Website eintippen - optional)"
-        web = raw_input( outp_text )
-        outp_text=str(len(owner_names)+1)+". Beliebiger Urheber '"+owner+"' (Lizenzinformationen eintippen - optional)"
-        license = raw_input( outp_text )
-else:
-    owner = args.owner
-    mail = args.mail
-    web = args.web
-    license = args.license
-
-if not args.dontask:
-    yn = raw_input( "Setze Urheber auf\t'"+owner+"'\neMail:\t\t\t'"+mail+"'\nWebsite:\t\t'"+web+"'\nLizenz:\t\t\t'"+license+"'\n Bitte bestätigen (j/n)" )
-    if not yn == "j":
-        print "Abbruch."
+        print("The section you've selected does not exist")
         sys.exit(0)
-if verbose:
-    print "Setze Urheber-Daten..."
+else:
+    print("Section selected. See data below:")
+    index = args.section
 
-procopts=[]
-procargs = {"Creator":owner, "CreatorWorkEmail":mail, "CreatorWorkURL":web, "Copyright":license}
+# Print out the configured values and ask before writing:
+print("Going to write the following metadata:")
 
-if os.path.isdir(args.path):
-    cf.process_folder(args.path, set_owner, procopts, procargs)
-elif os.path.isfile(args.path):
-    set_owner(args.path, *procopts, **procargs)
+data = []
+for key,value in config.items(index):
+    print(key+": "+value)
+    data.append("-"+key+"="+value)
+
+proceed = input("Proceed? (y/n)")
+if proceed == 'y':
+    procopts=data
+    procargs={}
+
+    if os.path.isdir(args.file):
+        cf.process_folder(args.file, set_owner, procopts, procargs)
+    elif os.path.isfile(args.file):
+        set_owner(args.file, *procopts, **procargs)
+    sys.exit(0)
+else:
+    print("Aborting")
+    sys.exit(0)
+
 sys.exit(0)
-

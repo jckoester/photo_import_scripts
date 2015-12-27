@@ -1,17 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ##Imports
+import sys
 import os
 import subprocess
 import datetime
 import shutil
 import re
-import edited_db as db
-import oldnames_db as ofdb
+#import edited_db as db
+#import oldnames_db as ofdb
 #class for manipulating xmp, exif and iptc
 #import pyexiv2
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
-from pyexiftool_settags import exiftool
+sys.path.append(os.path.join(os.path.dirname(__file__), 'pyexiftool_settags/'))
+print(sys.path)
+#from pyexiftool_settags import exiftool
+import exiftool
 #Global vars
 file_exts=('.tif','.nef','.jpg','.png', '.xmp', 'xcf')
 photo_exts=('.tif','.nef','.jpg','.png', 'xcf')
@@ -50,8 +54,8 @@ def rename_tiffs(path):
     #rename all tiff to tif
     files_tiff = [ f for f in os.listdir(path)  if f[-4:].lower() == 'tiff']
     if len(files_tiff)>0:
-        print "Umbenennen von *.tiff nach *.tif"
-        for t in files_tiff:       
+        print("Umbenennen von *.tiff nach *.tif")
+        for t in files_tiff:
             name=os.path.splitext(t)[0]
             os.rename(os.path.join(path, t), os.path.join(path,name+".tif"))
     return
@@ -74,14 +78,14 @@ def et_write(path, *args, **kwargs):
         else:
             subprocess.check_call(["exiftool", "-overwrite_original", argsstr, path])
     except subprocess.CalledProcessError:
-        print "Exiftool meldete einen Fehler beim Verarbeiten von '"+path+"'."
+        print("Exiftool meldete einen Fehler beim Verarbeiten von '"+path+"'.")
     return
 
 def rename(path, *args, **kwargs):
     #check if path exists:
     if not os.path.exists(path):
-        print "Datei "+path+" existiert nicht."
-    
+        print("Datei "+path+" existiert nicht.")
+
     name_old, ext = os.path.splitext(path)
     folderpath=os.path.dirname(path)
 
@@ -103,14 +107,14 @@ def rename(path, *args, **kwargs):
     if not ('EXIF:Model' in values):
          #Suche in oldnames
         if verbose:
-            print "Kein Kameramodell in EXIF gespeichert. Suche in Datenbank mit alten Dateinamen..."
+            print("Kein Kameramodell in EXIF gespeichert. Suche in Datenbank mit alten Dateinamen...")
         date,camera,shuttercount = ofdb.get_data(filename)
         date=datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
 #        name_new_start=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"+camera+"_"+shuttercount+"_"
 #        name_new_end=kwargs['suffix']+ext.upper()
-        print date
-        print camera
-        print shuttercount
+        print(date)
+        print(camera)
+        print(shuttercount)
 
 
     if('EXIF:Model' in values):
@@ -133,7 +137,7 @@ def rename(path, *args, **kwargs):
 
         if(values['EXIF:Model']=='Pre'):
             camera="PalmPre"
-            
+
 
         if(values['EXIF:Model'][:5]=='NIKON' and not 'MakerNotes:ShutterCount' in values.keys()	):
             if('XMP:ImageNumber' in values.keys()):
@@ -141,25 +145,25 @@ def rename(path, *args, **kwargs):
                 name_new_start+=camera+"_"+str(shuttercount).zfill(6)
             else:
                 if verbose:
-                    print "ShutterCount nicht gesetzt für %s, durchsuche Datenbank der Originale." % path
+                    print("ShutterCount nicht gesetzt für %s, durchsuche Datenbank der Originale." % path)
                 shuttercount = db.get_shuttercount(date, camera)
                 if shuttercount:
                     if verbose:
-                        print "Wert für ShutterCount gefunden."
+                        print("Wert für ShutterCount gefunden.")
                     name_new_start+=camera+"_"+str(shuttercount).zfill(6)
                 else:
                     if verbose:
-                        print "ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen..."
-                
+                        print("ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen...")
+
                     shuttercount = ofdb.get_shuttercount(filename)
-                    print shuttercount
+                    print(shuttercount)
                     if shuttercount:
                         if verbose:
-                            print "Wert für ShutterCount gefunden."
+                            print("Wert für ShutterCount gefunden.")
                         name_new_start+=camera+"_"+str(shuttercount).zfill(6)
                     else:
                         if verbose:
-                            print "Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path
+                            print("Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path)
                         if(not kwargs['force']):
                             return
                         else:
@@ -173,7 +177,7 @@ def rename(path, *args, **kwargs):
             shuttercount=values['MakerNotes:ShutterCount']
             camera=values['EXIF:Model'][6:]
             name_new_start+=camera+"_"+str(shuttercount).zfill(6)
-            print name_new_start
+            print(name_new_start)
         elif(values['EXIF:Model'][:5]=='Canon' and values['MakerNotes:FileNumber']):
             name_new_start+=camera+"_"+str(values['MakerNotes:FileNumber'])
         else:
@@ -184,10 +188,10 @@ def rename(path, *args, **kwargs):
 #                name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"+str(c)
             name_new_start+=str(c)
 
-        
+
     else:
         if verbose:
-            print "Kein Kameramodell in EXIF gespeichert. Umbenennen fehlgeschlagen für Datei: "+path
+            print("Kein Kameramodell in EXIF gespeichert. Umbenennen fehlgeschlagen für Datei: "+path)
 
     if(re.search('(BEA)', kwargs['suffix'])):
             c=0
@@ -199,12 +203,12 @@ def rename(path, *args, **kwargs):
     if name_new_end and name_new_start:
         name_new=name_new_start+name_new_end
         if verbose:
-            print os.path.basename(path)+" >> "+name_new
+            print(os.path.basename(path)+" >> "+name_new)
 
         shutil.move(path,os.path.join(folderpath,name_new))
     else:
         if verbose:
-            print "Umbennennen fehlgeschlagen für %s" % path
+            print("Umbennennen fehlgeschlagen für %s" % path)
     return
 
 
@@ -213,18 +217,18 @@ def process_folder(path, procfun, procargs, prockwargs):
     #Check if path exists
     if os.path.exists(path):
         if verbose:
-            print "Verarbeite Ordner "+path
+            print("Verarbeite Ordner "+path)
         rename_tiffs(path)
 
         files=[ f for f in os.listdir(path)  if f[-4:].lower() in photo_exts]
         for f in files:
             if os.path.exists(os.path.join(path, f)):
                 if verbose:
-                    print "Verarbeite Datei '"+f+"'."
+                    print("Verarbeite Datei '"+f+"'.")
                 #print procfun
                 procfun(os.path.join(path, f), *procargs, **prockwargs)
             else:
-                print "Datei verschwunden: '"+f+ext+"'."
+                print("Datei verschwunden: '"+f+ext+"'.")
         return
     else:
         raise PathError(path, "Pfad existiert nicht")
