@@ -46,15 +46,15 @@ if args.verbose:
 
 #Check source folder
 if not (os.path.exists(args.path)):
-    print "Ordner "+path+" existiert nicht"
+    print("Ordner "+path+" existiert nicht")
     sys.exit(0)
 
 #Check other params if in quiet mode:
 if args.dontask and len(args.prefix)!=2:
-    print "Prefix does not have two letters. Quitting"
+    print( "Prefix does not have two letters. Quitting")
     sys.exit(0)
 if args.dontask and len(args.suffix)==0:
-    print "No suffix set. Quitting"
+    print("No suffix set. Quitting")
     sys.exit(0)
 
 #Check params in normal / verbose mode:
@@ -75,12 +75,12 @@ while len(args.suffix)<3:
 if not args.dontask:
     yn = raw_input( "Bennenne um nach Schema "+args.prefix+"_YYYYMMDD_CameraSpecificCounter_"+args.suffix+".EXT\n Bitte bestätigen (j/n)" )
     if not yn == "j":
-        print "Abbruch."
+        print("Abbruch.")
         sys.exit(0)
 if verbose:
-    print "Starte Umbenennen..."
+    print("Starte Umbenennen...")
 
-print args.force
+print(args.force)
 procopts=[]
 procargs={'prefix':args.prefix, 'suffix':args.suffix, 'force':args.force}
 
@@ -92,5 +92,5 @@ elif os.path.isfile(args.path):
     cf.rename(args.path, *procopts, **procargs)
 
 if verbose:
-    print "Umbenennen abgeschlossen."
+    print("Umbenennen abgeschlossen.")
 sys.exit(0)
