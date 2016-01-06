@@ -32,12 +32,12 @@ if args.verbose:
 
 #Check source folder
 if not (os.path.exists(args.path)):
-    print "Ordner "+args.path+" existiert nicht"
+    print("Ordner "+args.path+" existiert nicht")
     sys.exit(0)
 
 #Check other params if in quiet mode:
 if args.dontask and len(args.event)==0:
-    print "No owner set. Quitting."
+    print("No owner set. Quitting.")
     sys.exit(0)
 
 #Check event name
@@ -49,10 +49,10 @@ if args.event is None or len(args.event) <= 0:
 if not args.dontask:
     yn = raw_input( "Setze Ereignis auf \""+args.event+"\"? (j/n)")
     if not yn == "j":
-        print "Abbruch."
+        print("Abbruch.")
         sys.exit(0)
 if verbose:
-    print "Setze Ereignis-Tag..."
+    print("Setze Ereignis-Tag...")
 
 procopts=[]
 procargs = {"Event":args.event}
@@ -63,4 +63,3 @@ if os.path.isdir(args.path):
 elif os.path.isfile(args.path):
     cf.et_write(args.path, *procopts, **procargs)
 sys.exit(0)
-
