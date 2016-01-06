@@ -98,7 +98,7 @@ def rename(path, *args, **kwargs):
     filename=os.path.basename(path)
 
     #Check for alternative JPG
-    if kwargs['suffix']=='ORI' and ext=='.JPG' and os.path.exists(name_old+'.NEF'):
+    if kwargs['suffix']=='ORI' and ext=='.NEF' and os.path.exists(name_old+'.JPG'):
         kwargs['suffix']='ORI_ALT'
 
     #Get exif information:
