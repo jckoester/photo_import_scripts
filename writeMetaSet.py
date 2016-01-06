@@ -53,6 +53,7 @@ parser = argparse.ArgumentParser(description='Set owner and copyright informatio
 parser.add_argument("file", help="Path of the folder containing the images")
 parser.add_argument("-mode", help="Mode that should be used. Same as the name of the config file")
 parser.add_argument("-set", help="Name of the metadata set to be written to file(s), has to be defined as a section in the config file")
+parser.add_argument("-proceed", help="Proceed without confirmation")
 
 #Processing the arguments
 args = parser.parse_args()
@@ -94,15 +95,19 @@ else:
     print("Section selected. See data below:")
     index = args.set
 
-# Print out the configured values and ask before writing:
-print("Going to write the following metadata:")
-
 data = []
 for key,value in config.items(index):
-    print(key+": "+value)
     data.append("-"+key+"="+value)
 
-proceed = input("Proceed? (y/n)")
+if not args.proceed == 'y':
+    # Print out the configured values and ask before writing:
+    print("Going to write the following metadata:")
+    for key,value in config.items(index):
+        print(key+": "+value)
+    proceed = input("Proceed? (y/n)")
+else:
+    proceed = 'y'
+
 if proceed == 'y':
     procopts=data
     procargs={}
