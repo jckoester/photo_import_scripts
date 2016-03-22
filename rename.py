@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
 #=================DESCRIPTION IS MISSING!========================================#
@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description='Rename all files in a folder (or a
 
 parser.add_argument("path", help="Path of the folder containing the images / path to the image")
 
-parser.add_argument("-p", "--prefix", default="", help="2 letter prefix indicating the creator")
+parser.add_argument("-p", "--prefix", default="", help="2/3 letter prefix indicating the creator")
 parser.add_argument("-s", "--suffix", default="", help="suffix indicating the type of image. (eg ORI for original file, DMA for digital master, PRN for a printer optimzed file (please use PRN_profilename for profiled images))")
 
 parser.add_argument("-f", "--force", action="store_true", help="Force renaming using time if no shuttercount is set.")
@@ -50,15 +50,15 @@ if not (os.path.exists(args.path)):
     sys.exit(0)
 
 #Check other params if in quiet mode:
-if args.dontask and len(args.prefix)!=2:
-    print( "Prefix does not have two letters. Quitting")
+if args.dontask and len(args.prefix)>3:
+    print( "Prefix does not have more than three letters. Quitting")
     sys.exit(0)
 if args.dontask and len(args.suffix)==0:
     print("No suffix set. Quitting")
     sys.exit(0)
 
 #Check params in normal / verbose mode:
-while len(args.prefix)!=2:
+while len(args.prefix)>3:
     if args.prefix=="q":
         sys.exit(0)
     else:
