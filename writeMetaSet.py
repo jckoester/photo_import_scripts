@@ -38,6 +38,7 @@ import configparser
 
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
 #from lib.pyexiftool_settags import exiftool
+import exiftool
 from lib import commonfunc as cf
 
 # Procedure for writing the metadata

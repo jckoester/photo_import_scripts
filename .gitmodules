@@ -1,3 +1,6 @@
 [submodule "lib/pyexiftool_settags"]
 	path = lib/pyexiftool_settags
 	url = https://github.com/halloleo/pyexiftool.git
+[submodule "lib/pyexiftool"]
+	path = lib/pyexiftool
+	url = git://github.com/smarnach/pyexiftool.git
