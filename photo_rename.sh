@@ -6,7 +6,10 @@ own="$1"
 dir="$2"
 
 # Check if parameters are complete
-
+if [ -z "$1" ] || [ -z "$2" ] ; then
+  echo "Please specify the required parameters."
+  exit 1
+fi
 
 # Check if folder exists
 if [ ! -d "$dir" ]; then
@@ -17,6 +20,9 @@ fi
 
 # Change working dir
 cd ${dir}
+
+# Extension fix:
+rename "jpg" "JPG" *
 
 # Rename all images according to the scheme YYYYMMDD_hhmmss_OW_Model_Shutter.ext
 exiftool '-filename<${datetimeoriginal}_'${1}'_${model}_${ShutterCount}%-c_ORI.%e' -d "%Y%m%d_%H%M%S" -q .
