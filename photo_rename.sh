@@ -19,7 +19,7 @@ if [ ! -d "$dir" ]; then
 fi
 
 # Change working dir
-cd ${dir}
+cd "${dir}";
 
 # Extension fix:
 rename "jpg" "JPG" *
