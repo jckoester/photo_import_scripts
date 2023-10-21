@@ -7,10 +7,6 @@ import subprocess
 import datetime
 import shutil
 import re
-#import edited_db as db
-#import oldnames_db as ofdb
-#class for manipulating xmp, exif and iptc
-#import pyexiv2
 #exiftool bindings for python (git://github.com/smarnach/pyexiftool.git)
 sys.path.append(os.path.join(os.path.dirname(__file__), 'pyexiftool_settags/'))
 
@@ -20,7 +16,7 @@ import exiftool
 file_exts=('.tif','.nef','.jpg','.png', '.xmp', 'xcf')
 photo_exts=('.tif','.nef','.jpg','.png', 'xcf')
 verbose=False
-
+dryrun=False
 
 #Erorr handling
 class Error(Exception):
@@ -46,8 +42,8 @@ class PathError(Error):
 def getexifvalue(path, args):
 #    args={name}
 
-    with exiftool.ExifTool() as et:
-        value = et.get_tags(args, path)
+    with exiftool.ExifToolHelper() as et:
+        value = et.get_tags(path, args)
     return value
 
 def rename_tiffs(path):
@@ -103,19 +99,7 @@ def rename(path, *args, **kwargs):
 
     #Get exif information:
     values = getexifvalue(path, {'DateTimeOriginal','ModifyDate', 'Model', 'ShutterCount', 'ImageNumber', 'SerialNumber', 'FileNumber'} )
-
-    if not ('EXIF:Model' in values):
-         #Suche in oldnames
-        if verbose:
-            print("Kein Kameramodell in EXIF gespeichert. Suche in Datenbank mit alten Dateinamen...")
-        date,camera,shuttercount = ofdb.get_data(filename)
-        date=datetime.datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-#        name_new_start=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"+camera+"_"+shuttercount+"_"
-#        name_new_end=kwargs['suffix']+ext.upper()
-        print(date)
-        print(camera)
-        print(shuttercount)
-
+    values=values[0]
 
     if('EXIF:Model' in values):
         if('EXIF:DateTimeOriginal' in values):
@@ -125,8 +109,8 @@ def rename(path, *args, **kwargs):
             date=values['EXIF:ModifyDate']
             date=datetime.datetime.strptime(date, "%Y:%m:%d %H:%M:%S")
         camera=values['EXIF:Model']
-        name_new_start=kwargs['prefix']+"_"+date.strftime("%Y%m%d")+"_"
-        name_new_end="_"+kwargs['suffix']+ext.upper()
+        name_new_start=date.strftime("%Y%m%d-%H%M%S")+"_"
+        name_new_end="_"+kwargs['suffix']+ext.lower()
 
         if(values['EXIF:Model'][:5]=='NIKON'):
              camera=values['EXIF:Model'][6:]
@@ -138,46 +122,27 @@ def rename(path, *args, **kwargs):
         if(values['EXIF:Model']=='Pre'):
             camera="PalmPre"
 
-
         if(values['EXIF:Model'][:5]=='NIKON' and not 'MakerNotes:ShutterCount' in values.keys()	):
             if('XMP:ImageNumber' in values.keys()):
                 shuttercount=values['XMP:ImageNumber']
                 name_new_start+=camera+"_"+str(shuttercount).zfill(6)
             else:
                 if verbose:
-                    print("ShutterCount nicht gesetzt für %s, durchsuche Datenbank der Originale." % path)
-                shuttercount = db.get_shuttercount(date, camera)
-                if shuttercount:
-                    if verbose:
-                        print("Wert für ShutterCount gefunden.")
-                    name_new_start+=camera+"_"+str(shuttercount).zfill(6)
+                    print("Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path)
+                    if(not kwargs['force']):
+                        return
                 else:
-                    if verbose:
-                        print("ShutterCount nicht in der Datenbank der Originale gefunden. Dursuche Datenbank mit alten Dateinamen...")
-
-                    shuttercount = ofdb.get_shuttercount(filename)
-                    print(shuttercount)
-                    if shuttercount:
-                        if verbose:
-                            print("Wert für ShutterCount gefunden.")
-                        name_new_start+=camera+"_"+str(shuttercount).zfill(6)
-                    else:
-                        if verbose:
-                            print("Kein Wert für ShutterCount gefunden. Überspringe Datei %s." % path)
-                        if(not kwargs['force']):
-                            return
-                        else:
-                            name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"
-                            c=0
-                            while(os.path.exists(os.path.join(folderpath,name_new_start+str(c)+name_new_end))):
-                                c+=1
-                            name_new_start+=str(c)
+                    name_new_start+=camera+"_"+date.strftime("%H%M%S")+"_"
+                    c=0
+                    while(os.path.exists(os.path.join(folderpath,name_new_start+str(c)+name_new_end))):
+                        c+=1
+                        name_new_start+=str(c)
 
         elif(values['EXIF:Model'][:5]=='NIKON'):
             shuttercount=values['MakerNotes:ShutterCount']
             camera=values['EXIF:Model'][6:]
             name_new_start+=camera+"_"+str(shuttercount).zfill(6)
-            print(name_new_start)
+            # print(name_new_start)
         elif(values['EXIF:Model'][:5]=='Canon' and values['MakerNotes:FileNumber']):
             name_new_start+=camera+"_"+str(values['MakerNotes:FileNumber'])
         else:
@@ -195,17 +160,34 @@ def rename(path, *args, **kwargs):
 
     if(re.search('(BEA)', kwargs['suffix'])):
             c=0
-            name_new_end="_"+kwargs['suffix']+"_" + str(c)+ext.upper()
+            name_new_end="_"+kwargs['suffix']+"_" + str(c)+ext.lower()
             while(os.path.exists(os.path.join(folderpath, name_new_start+name_new_end))):
                 c+=1
-                name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.upper()
+                name_new_end="_"+kwargs['suffix']+"_"+str(c)+ext.lower()
 
     if name_new_end and name_new_start:
         name_new=name_new_start+name_new_end
         if verbose:
-            print(os.path.basename(path)+" >> "+name_new)
+            print("Benenne um: "+os.path.basename(path)+" >> "+name_new)
+        if not dryrun:
+            shutil.move(path,os.path.join(folderpath,name_new))
+        else: 
+            print("Simulation! Es wurde keine Datei umbenannt.")
 
-        shutil.move(path,os.path.join(folderpath,name_new))
+        if os.path.exists(name_old+'.xmp'):
+            name_new_end_xmp="_"+kwargs['suffix']+".xmp"
+            name_new_xmp=name_new_start+name_new_end_xmp
+            xmppath = path.replace(ext, ".xmp")
+        if os.path.exists(name_old+'.XMP'):
+            name_new_end_xmp="_"+kwargs['suffix']+".xmp"
+            name_new_xmp=name_new_start+name_new_end_xmp
+            xmppath = path.replace(ext, ".XMP")
+        
+        if xmppath:
+            if verbose:
+                print("Bennene xmp-Sidecar um: "+ os.path.basename(xmppath)+" >> "+name_new_xmp)
+            if not dryrun:
+                shutil.move(xmppath,os.path.join(folderpath,name_new_xmp))
     else:
         if verbose:
             print("Umbennennen fehlgeschlagen für %s" % path)
