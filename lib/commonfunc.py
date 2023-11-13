@@ -13,10 +13,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'pyexiftool_settags/'))
 #from pyexiftool_settags import exiftool
 import exiftool
 #Global vars
-file_exts=('.tif','.nef','.jpg','.png', '.xmp', 'xcf')
-photo_exts=('.tif','.nef','.jpg','.png', 'xcf')
+file_exts=('.tif','.nef','.jpg','.png', '.xmp', '.dng')
+photo_exts=('.tif','.nef','.jpg','.png', '.dng')
 verbose=False
 dryrun=False
+xmppath=False
 
 #Erorr handling
 class Error(Exception):
@@ -173,6 +174,8 @@ def rename(path, *args, **kwargs):
             shutil.move(path,os.path.join(folderpath,name_new))
         else: 
             print("Simulation! Es wurde keine Datei umbenannt.")
+
+        xmppath=False
 
         if os.path.exists(name_old+'.xmp'):
             name_new_end_xmp="_"+kwargs['suffix']+".xmp"
