@@ -203,7 +203,15 @@ def process_folder(path, procfun, procargs, prockwargs):
     if os.path.exists(path):
         if verbose:
             print("Verarbeite Ordner "+path)
-        rename_tiffs(path)
+        #rename_tiffs(path)
+        folders = [f for f in os.listdir(path) ]
+        
+        for f in folders:
+            fpath = path+"/"+f
+            print(fpath)
+            if os.path.isdir(fpath):
+                process_folder(fpath, rename, procargs, prockwargs)
+
 
         files=[ f for f in os.listdir(path)  if f[-4:].lower() in photo_exts]
         for f in files:
